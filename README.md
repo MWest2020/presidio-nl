@@ -1,6 +1,6 @@
 # Presidio-NL: Nederlandse Tekst Anonimisatie
 
-Dit open source project combineert [Microsoft Presidio](https://github.com/microsoft/presidio) met SpaCy voor het analyseren en anonimiseren van Nederlandse tekst. Het project biedt een krachtige CLI-tool voor het identificeren en anonimiseren van gevoelige informatie zoals namen, locaties, telefoonnummers en IBAN-nummers.
+Dit open source project combineert [Microsoft Presidio](https://github.com/microsoft/presidio) met SpaCy voor het analyseren en anonimiseren van Nederlandse tekst. Het project biedt zowel een CLI-tool als een REST API voor het identificeren en anonimiseren van gevoelige informatie zoals namen, locaties, telefoonnummers en IBAN-nummers.
 
 ## Features
 - **Entiteitsanalyse:** Identificeer gevoelige informatie zoals:
@@ -10,6 +10,7 @@ Dit open source project combineert [Microsoft Presidio](https://github.com/micro
   - IBAN-nummers
 - **Anonimisatie:** Vervang gevoelige informatie met configureerbare placeholders
 - **Nederlandstalige ondersteuning:** Geoptimaliseerd voor Nederlandse teksten met SpaCy
+- **Flexibele interfaces:** Beschikbaar als CLI-tool en REST API
 - **Uitbreidbaar:** Eenvoudig nieuwe entiteitstypen en anonimisatie-opties toevoegen
 - **Type-safe:** Volledig voorzien van type hints
 - **Goed getest:** Uitgebreide test suite met pytest
@@ -20,6 +21,7 @@ presidio-nl/
 ├── src/
 │   ├── analyzer/          # Tekstanalyse functionaliteit
 │   ├── anonymizer/        # Anonimisatie functionaliteit
+│   ��── api/              # REST API implementatie
 │   └── cli/              # Command-line interface
 ├── tests/                # Test suite
 ├── requirements/         # Dependencies per omgeving
@@ -44,7 +46,14 @@ presidio-nl/
 
 3. Installeer de dependencies:
    ```bash
+   # Voor CLI gebruik:
    pip install -r requirements/base.txt
+
+   # Voor API gebruik:
+   pip install -r requirements/api.txt
+
+   # Voor ontwikkeling (inclusief test dependencies):
+   pip install -r requirements/dev.txt
    ```
 
 4. Download het Nederlandse SpaCy model:
@@ -78,6 +87,35 @@ presidio-nl/
    python main.py anonymize pad/naar/directory
    ```
 
+### REST API
+
+1. **Start de API server:**
+   ```bash
+   # Installeer eerst de API dependencies:
+   pip install -r requirements/api.txt
+
+   # Start de server:
+   uvicorn src.api.app:app --reload
+   ```
+
+2. **Bekijk de API documentatie:**
+   Open `http://localhost:8000/docs` in je browser voor de interactieve Swagger documentatie.
+
+3. **Gebruik de API:**
+   ```bash
+   # Analyseren van tekst
+   curl -X POST "http://localhost:8000/api/v1/analyze" \
+        -H "Content-Type: application/json" \
+        -d '{"text": "Jan de Vries woont in Amsterdam."}'
+
+   # Anonimiseren van tekst
+   curl -X POST "http://localhost:8000/api/v1/anonymize" \
+        -H "Content-Type: application/json" \
+        -d '{"text": "Jan de Vries woont in Amsterdam."}'
+   ```
+
+   Zie [API Tutorial](docs/api_tutorial.md) voor meer voorbeelden en details.
+
 ### Output
 
 - **Analyse output:**
@@ -103,7 +141,12 @@ pip install -r requirements/dev.txt
 ### Tests uitvoeren
 
 ```bash
+# Alle tests
 python -m pytest tests/
+
+# Specifieke tests
+python -m pytest tests/test_api.py -v  # API tests
+python -m pytest tests/test_cli.py -v  # CLI tests
 ```
 
 ### Code kwaliteit

@@ -4,4 +4,6 @@
 pytest>=7.0.0
 pytest-cov>=3.0.0
 pytest-mock>=3.0.0
-coverage>=6.0.0 
+coverage>=6.0.0
+httpx>=0.24.0  # Voor FastAPI TestClient
+fastapi>=0.68.0  # Voor API tests 

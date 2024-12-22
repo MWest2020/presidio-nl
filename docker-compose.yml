@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - ./src:/app/src
+      - pip-cache:/root/.cache/pip
+      - model-cache:/app/models
+    environment:
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - API_ROOT_PATH=/api/v1
+      - PYTHONUNBUFFERED=1
+      - TRANSFORMERS_CACHE=/app/models
+    command: uvicorn src.api.app:app --host ${API_HOST:-0.0.0.0} --port 8000 --reload --root-path ${API_ROOT_PATH:-/api/v1}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  cli:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./src:/app/src
+      - model-cache:/app/models
+    environment:
+      - TRANSFORMERS_CACHE=/app/models
+    command: ["python", "main.py"]
+    profiles:
+      - cli
+
+volumes:
+  pip-cache:
+  model-cache:
