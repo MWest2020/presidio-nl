@@ -1,0 +1,15 @@
+-r base.txt
+
+# Development tools
+black>=22.0.0
+flake8>=4.0.0
+mypy>=0.900
+isort>=5.0.0
+
+# Documentation
+sphinx>=4.0.0
+sphinx-rtd-theme>=1.0.0
+
+# Type checking
+types-setuptools
+types-requests 
