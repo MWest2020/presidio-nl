@@ -2,6 +2,8 @@
 import pytest
 from fastapi.testclient import TestClient
 from src.api.app import app
+import time
+import concurrent.futures
 
 @pytest.fixture
 def client():
@@ -179,3 +181,125 @@ def test_live_api():
     data = response.json()
     assert "[NAAM]" in data["anonymized_text"]
     assert "[LOCATIE]" in data["anonymized_text"]
+
+def test_api_response_time(client):
+    """Test API response time for various operations."""
+    # Test analyze endpoint response time
+    start_time = time.time()
+    response = client.post(
+        "/api/v1/analyze",
+        json={
+            "text": "Jan de Vries woont in Amsterdam."
+        }
+    )
+    analyze_time = time.time() - start_time
+    assert response.status_code == 200
+    assert analyze_time < 1.0  # Response should be under 1 second
+    
+    # Test anonymize endpoint response time
+    start_time = time.time()
+    response = client.post(
+        "/api/v1/anonymize",
+        json={
+            "text": "Jan de Vries woont in Amsterdam."
+        }
+    )
+    anonymize_time = time.time() - start_time
+    assert response.status_code == 200
+    assert anonymize_time < 1.0  # Response should be under 1 second
+
+def test_api_concurrent_requests(client):
+    """Test API performance under concurrent load."""
+    num_requests = 10
+    
+    def make_request():
+        return client.post(
+            "/api/v1/analyze",
+            json={
+                "text": "Jan de Vries woont in Amsterdam."
+            }
+        )
+    
+    start_time = time.time()
+    with concurrent.futures.ThreadPoolExecutor(max_workers=num_requests) as executor:
+        futures = [executor.submit(make_request) for _ in range(num_requests)]
+        responses = [f.result() for f in futures]
+    
+    total_time = time.time() - start_time
+    
+    # Check all responses were successful
+    assert all(r.status_code == 200 for r in responses)
+    
+    # Check average response time
+    avg_time = total_time / num_requests
+    assert avg_time < 2.0  # Average response time should be under 2 seconds
+
+def test_api_large_text_performance(client):
+    """Test API performance with large text input."""
+    # Generate a large text (approximately 100KB)
+    large_text = "Jan de Vries woont in Amsterdam. " * 1000
+    
+    start_time = time.time()
+    response = client.post(
+        "/api/v1/analyze",
+        json={
+            "text": large_text
+        }
+    )
+    processing_time = time.time() - start_time
+    
+    assert response.status_code == 200
+    assert processing_time < 5.0  # Should process large text under 5 seconds
+
+def test_api_memory_usage(client):
+    """Test API memory usage with repeated requests."""
+    import psutil
+    import os
+    
+    process = psutil.Process(os.getpid())
+    initial_memory = process.memory_info().rss / 1024 / 1024  # Convert to MB
+    
+    # Make 50 requests
+    for _ in range(50):
+        response = client.post(
+            "/api/v1/analyze",
+            json={
+                "text": "Jan de Vries woont in Amsterdam."
+            }
+        )
+        assert response.status_code == 200
+    
+    final_memory = process.memory_info().rss / 1024 / 1024  # Convert to MB
+    memory_increase = final_memory - initial_memory
+    
+    # Memory usage should not increase significantly (less than 100MB)
+    assert memory_increase < 100
+
+@pytest.mark.slow
+def test_api_long_running_stability(client):
+    """Test API stability over a longer period."""
+    start_time = time.time()
+    request_count = 0
+    error_count = 0
+    
+    # Run for 1 minute
+    while time.time() - start_time < 60:
+        try:
+            response = client.post(
+                "/api/v1/analyze",
+                json={
+                    "text": "Jan de Vries woont in Amsterdam."
+                }
+            )
+            assert response.status_code == 200
+            request_count += 1
+        except Exception:
+            error_count += 1
+    
+    # Check error rate
+    error_rate = error_count / request_count if request_count > 0 else 1
+    assert error_rate < 0.01  # Less than 1% errors
+    assert request_count > 0  # Should handle multiple requests
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

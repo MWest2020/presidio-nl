@@ -62,4 +62,7 @@ def test_analyze_text_with_custom_entities(analyzer):
     
     # Should only find person, not location
     assert all(r.entity_type == "PERSON" for r in results)
-    assert not any(r.entity_type == "LOCATION" for r in results) 
+    assert not any(r.entity_type == "LOCATION" for r in results)
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

@@ -4,7 +4,7 @@ from typing import List, Optional
 
 class DutchTextAnalyzer:
     """Main analyzer class for Dutch text analysis."""
-    
+
     def __init__(self):
         """Initialize the analyzer with Dutch language support."""
         # Configuratie voor SpaCy NLP Engine
@@ -32,7 +32,7 @@ class DutchTextAnalyzer:
             "PHONE_NUMBER",
             "IBAN_CODE"
         ]
-
+        
     def analyze_text(
         self,
         text: str,
@@ -55,4 +55,4 @@ class DutchTextAnalyzer:
             text=text,
             entities=entities,
             language="nl"
-        ) 
+        )
