@@ -1,3 +1,4 @@
+"""Core anonymizer functionality."""
 from typing import Dict, List, Optional
 from presidio_analyzer import RecognizerResult
 from presidio_anonymizer import AnonymizerEngine
@@ -12,11 +13,13 @@ class DutchTextAnonymizer:
         
         # Default operators for each entity type
         self.default_operators = {
-            "PERSON": OperatorConfig("replace", {"new_value": "[NAAM]"}),
+            "PERSON": OperatorConfig("replace", {"new_value": "[PERSOON]"}),
             "LOCATION": OperatorConfig("replace", {"new_value": "[LOCATIE]"}),
             "PHONE_NUMBER": OperatorConfig("replace", {"new_value": "[TELEFOONNUMMER]"}),
-            "IBAN_CODE": OperatorConfig("replace", {"new_value": "[REKENINGNUMMER]"}),
-            "ORGANIZATION": OperatorConfig("replace", {"new_value": "[ORGANISATIE]"})
+            "EMAIL": OperatorConfig("replace", {"new_value": "[EMAIL]"}),
+            "ORGANIZATION": OperatorConfig("replace", {"new_value": "[ORGANISATIE]"}),
+            "IBAN": OperatorConfig("replace", {"new_value": "[IBAN]"}),
+            "ADDRESS": OperatorConfig("replace", {"new_value": "[ADRES]"})
         }
     
     def anonymize_text(
@@ -35,33 +38,7 @@ class DutchTextAnonymizer:
             
         Returns:
             Anonymized text
-            
-        Raises:
-            ValueError: If input is invalid
         """
-        # Input validation
-        if not isinstance(text, str):
-            raise ValueError("Text must be a string")
-        if not text.strip():
-            raise ValueError("Text cannot be empty")
-        
-        if not isinstance(analyzer_results, list):
-            raise ValueError("Analyzer results must be a list")
-        
-        # Operator validation
-        if operators is not None:
-            if not isinstance(operators, dict):
-                raise ValueError("Operators must be a dictionary")
-            if not operators:
-                raise ValueError("Operators dictionary cannot be empty")
-            if not all(isinstance(v, OperatorConfig) for v in operators.values()):
-                raise ValueError("All operators must be OperatorConfig objects")
-            
-            # Check if all required operators are present
-            entity_types = {r.entity_type for r in analyzer_results}
-            if not all(et in operators for et in entity_types):
-                raise ValueError("Missing operators for some entity types")
-        
         # Use default operators if none provided
         operators = operators or self.default_operators
         
@@ -77,6 +54,10 @@ class DutchTextAnonymizer:
         used_ranges = []
         
         for result in analyzer_results:
+            # Skip if confidence score is too low
+            if result.score < 0.4:
+                continue
+                
             # Check if this range overlaps with any used range
             overlaps = False
             for start, end in used_ranges:
@@ -95,4 +76,5 @@ class DutchTextAnonymizer:
             operators=operators
         )
         
-        return anonymized_result.text
+        return anonymized_result.text 
+        return anonymized_result.text 

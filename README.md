@@ -1,96 +1,60 @@
 # Presidio-NL
 
-Een Nederlandse versie van Microsoft Presidio voor het herkennen en anonimiseren van gevoelige informatie in tekst.
+Nederlandse versie van Microsoft Presidio voor het herkennen en anonimiseren van gevoelige informatie in tekst.
 
 ## Features
 
-- Herkenning van Nederlandse entiteiten (personen, locaties, etc.)
-- Anonimisatie van gevoelige informatie
-- REST API voor integratie
-- CLI tool voor lokaal gebruik
-- Kubernetes/Helm deployment support
+- 🔍 Herkenning van Nederlandse entiteiten (personen, locaties, etc.)
+- 🔒 Anonimisatie van gevoelige informatie
+- 🌐 REST API voor integratie
+- 💻 CLI tool voor lokaal gebruik
+- ☁️ Kubernetes/Helm deployment support
 
-## Installatie
-
-### Met pip
+## Quick Start
 
 ```bash
-pip install -r requirements/base.txt  # Basis functionaliteit
-pip install -r requirements/api.txt   # Voor de REST API
+# Start met Docker
+docker compose up api
+
+# Test de API
+curl -X POST http://localhost:8000/api/v1/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Jan de Vries woont in Amsterdam"}'
 ```
 
-### Met Docker
+## Documentatie
 
-```bash
-docker-compose up api  # Start alleen de API
-# of
-docker-compose up     # Start zowel API als CLI
-```
+### 📚 Tutorials
+- [Quickstart Guide](docs/tutorials/quickstart.md) - Begin hier!
+- [API Tutorial](docs/tutorials/api.md) - Leer de API gebruiken
+- [CLI Tutorial](docs/tutorials/cli.md) - Werk met de command line tool
 
-## API Gebruik
+### 📖 Guides
+- [Installation Guide](docs/guides/installation.md) - Gedetailleerde installatie instructies
+- [Deployment Guide](docs/guides/deployment.md) - Productie deployment handleiding
 
-De API draait standaard op `http://localhost:8000/api/v1/`. Je kunt dit aanpassen via:
-
-1. Omgevingsvariabelen:
-   ```bash
-   export API_HOST=0.0.0.0
-   export API_PORT=8000
-   export API_ROOT_PATH=/api/v1
-   ```
-
-2. Docker Compose:
-   ```yaml
-   services:
-     api:
-       environment:
-         - API_HOST=0.0.0.0
-         - API_PORT=8000
-         - API_ROOT_PATH=/api/v1
-   ```
-
-3. Helm Values:
-   ```yaml
-   app:
-     api:
-       host: "0.0.0.0"
-       port: 8000
-       rootPath: "/api/v1"
-   ```
-
-### API Endpoints
-
-- Health Check: `GET /api/v1/health`
-- Analyze: `POST /api/v1/analyze`
-- Anonymize: `POST /api/v1/anonymize`
-
-Zie de [API Tutorial](docs/api_tutorial.md) voor meer details en voorbeelden.
-
-## CLI Gebruik
-
-De CLI ondersteunt twee hoofdcommando's:
-
-```bash
-# Analyseer tekst
-python main.py analyze "Jan de Vries woont in Amsterdam."
-
-# Anonimiseer tekst
-python main.py anonymize "Jan de Vries woont in Amsterdam."
-```
-
-Zie de [CLI Tutorial](docs/cli_tutorial.md) voor meer details en voorbeelden.
+### 📑 Reference
+- [API Reference](docs/reference/api.md) - API specificatie
+- [CLI Reference](docs/reference/cli.md) - CLI commando's
+- [Configuration](docs/reference/configuration.md) - Configuratie opties
 
 ## Development
 
-1. Clone de repository
-2. Installeer development dependencies:
-   ```bash
-   pip install -r requirements/dev.txt
-   ```
-3. Run de tests:
-   ```bash
-   python -m pytest
-   ```
+```bash
+# Installeer development dependencies
+pip install -r requirements/dev.txt
 
-## Deployment
+# Run tests
+python -m pytest
+```
 
-Zie de [Helm Installatie Guide](docs/helm_installation.md) voor instructies over het deployen naar Kubernetes.
+## License
+
+[MIT License](LICENSE)
+
+## Contact
+
+Voor vragen en support:
+- 📧 Email: [support@example.com](mailto:support@example.com)
+- 🌐 Website: [https://example.com](https://example.com)
+- 💬 GitHub Issues: [Report een probleem](https://github.com/your-org/presidio-nl/issues)
