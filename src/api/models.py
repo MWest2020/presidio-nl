@@ -1,5 +1,5 @@
 """Pydantic models for the API."""
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, validator
 
 class TextRequest(BaseModel):
@@ -40,4 +40,10 @@ class AnonymizationResponse(BaseModel):
     """Response model for text anonymization."""
     original_text: str
     anonymized_text: str
-    entities_found: List[AnalysisResult] 
+    entities_found: List[Dict]
+
+class PDFProcessingResponse(BaseModel):
+    """Response model for PDF processing."""
+    total_entities: int
+    entities_by_type: Dict[str, List[Dict[str, Any]]]
+    anonymized_pdf_url: str 
