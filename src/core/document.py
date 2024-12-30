@@ -8,6 +8,23 @@ from PyPDF2 import PdfReader, PdfWriter
 from .analyzer import DutchTextAnalyzer
 from .anonymizer import DutchTextAnonymizer
 
+def extract_text_from_pdf(pdf_path: str) -> str:
+    """
+    Extract text content from a PDF file.
+    
+    Args:
+        pdf_path: Path to the PDF file
+        
+    Returns:
+        Extracted text content as string
+    """
+    text_content = ""
+    with open(pdf_path, 'rb') as file:
+        pdf_reader = PdfReader(file)
+        for page in pdf_reader.pages:
+            text_content += page.extract_text() + "\n"
+    return text_content
+
 class DocumentProcessor:
     """Processor for handling various document types."""
     
@@ -45,11 +62,7 @@ class DocumentProcessor:
             output_path = verwerkt_dir / f"{input_path.stem}_anon.pdf"
         
         # Extract text from PDF
-        text_content = ""
-        with open(input_path, 'rb') as file:
-            pdf_reader = PdfReader(file)
-            for page in pdf_reader.pages:
-                text_content += page.extract_text() + "\n"
+        text_content = extract_text_from_pdf(str(input_path))
         
         # Analyze text
         results = self.analyzer.analyze_text(text_content, entities)

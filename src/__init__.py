@@ -1,3 +1,3 @@
-"""Presidio-NL package for Dutch text analysis and anonymization."""
+"""Root package for presidio-nl."""
 
 __version__ = "0.1.0" 

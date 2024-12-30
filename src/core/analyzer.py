@@ -1,10 +1,16 @@
-"""Core analyzer functionality."""
-from presidio_analyzer import AnalyzerEngine, Pattern, PatternRecognizer
-from presidio_analyzer.nlp_engine import NlpEngineProvider
-from presidio_analyzer.recognizer_result import RecognizerResult
-from presidio_analyzer.recognizer_registry import RecognizerRegistry
+"""Main analyzer module."""
 from typing import List, Optional
 import re
+
+from presidio_analyzer import (
+    AnalyzerEngine,
+    RecognizerRegistry,
+    Pattern,
+    PatternRecognizer
+)
+from presidio_analyzer.nlp_engine import NlpEngineProvider
+
+from .recognizers import RobBERTRecognizer
 
 class DutchTextAnalyzer:
     """Main analyzer class for Dutch text analysis."""
@@ -36,6 +42,9 @@ class DutchTextAnalyzer:
 
         # Add Dutch recognizers
         self._add_dutch_recognizers()
+        
+        # Add RobBERT recognizer
+        registry.add_recognizer(RobBERTRecognizer())
 
         # Words to ignore
         self.false_positives = {

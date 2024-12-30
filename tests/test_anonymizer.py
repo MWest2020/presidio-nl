@@ -1,6 +1,6 @@
 import pytest
 from presidio_analyzer.recognizer_result import RecognizerResult
-from src.anonymizer.engine import DutchTextAnonymizer
+from src.core.anonymizer import DutchTextAnonymizer
 
 @pytest.fixture
 def anonymizer():
@@ -31,7 +31,7 @@ def test_anonymizer_initialization(anonymizer):
         "PERSON",
         "LOCATION",
         "PHONE_NUMBER",
-        "IBAN_CODE"
+        "IBAN"
     ])
 
 def test_anonymize_text_with_person_and_location(anonymizer, mock_analysis_results):
@@ -67,7 +67,7 @@ def test_anonymize_text_with_iban():
     text = "IBAN: NL91ABNA0417164300"
     results = [
         RecognizerResult(
-            entity_type="IBAN_CODE",
+            entity_type="IBAN",
             start=6,
             end=24,
             score=0.9

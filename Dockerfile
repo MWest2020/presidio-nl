@@ -11,6 +11,8 @@ WORKDIR /app
 # Kopieer alleen requirements files eerst voor betere cache benutting
 COPY requirements/base.txt requirements/base.txt
 COPY requirements/api.txt requirements/api.txt
+COPY requirements/test.txt requirements/test.txt
+COPY setup.py .
 
 # Installeer dependencies in een virtuele omgeving
 RUN python -m venv /opt/venv
@@ -18,7 +20,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 # Installeer dependencies met caching
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install --no-cache-dir -r requirements/api.txt
+    pip install --no-cache-dir -r requirements/api.txt -r requirements/test.txt
 
 # Download models naar een specifieke directory
 RUN mkdir -p /app/models && \
@@ -37,12 +39,19 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Kopieer de gedownloade models
 COPY --from=builder /app/models /app/models
 ENV TRANSFORMERS_CACHE=/app/models
+ENV HF_HOME=/app/models
 
 WORKDIR /app
 
-# Kopieer applicatie code
+# Kopieer applicatie code en tests
 COPY src/ src/
+COPY tests/ tests/
 COPY main.py .
+COPY pytest.ini .
+COPY setup.py .
+
+# Installeer package in development mode
+RUN pip install -e .
 
 # Runtime configuratie
 ENV PYTHONUNBUFFERED=1

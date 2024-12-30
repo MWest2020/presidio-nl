@@ -31,62 +31,21 @@ def create_parser() -> argparse.ArgumentParser:
     # Analyze command
     analyze_parser = subparsers.add_parser(
         "analyze",
-        help="Analyseer tekst voor entiteiten"
+        help="Analyseer tekst of bestand(en)"
     )
     analyze_parser.add_argument(
-        "text",
-        help="Tekst om te analyseren (of pad naar bestand als --input-file is gebruikt)"
-    )
-    analyze_parser.add_argument(
-        "--input-file",
-        action="store_true",
-        help="Behandel TEXT als een bestandspad"
-    )
-    analyze_parser.add_argument(
-        "--output-file",
-        type=Path,
-        help="Schrijf output naar bestand"
+        "input",
+        help="Tekst om te analyseren, of pad naar bestand/directory"
     )
     
     # Anonymize command
     anonymize_parser = subparsers.add_parser(
         "anonymize",
-        help="Anonimiseer tekst"
+        help="Anonimiseer tekst of bestand(en)"
     )
     anonymize_parser.add_argument(
-        "text",
-        help="Tekst om te anonimiseren (of pad naar bestand als --input-file is gebruikt)"
-    )
-    anonymize_parser.add_argument(
-        "--input-file",
-        action="store_true",
-        help="Behandel TEXT als een bestandspad"
-    )
-    anonymize_parser.add_argument(
-        "--output-file",
-        type=Path,
-        help="Schrijf output naar bestand"
-    )
-    
-    # PDF command
-    pdf_parser = subparsers.add_parser(
-        "pdf",
-        help="Verwerk een PDF bestand"
-    )
-    pdf_parser.add_argument(
-        "input_file",
-        type=Path,
-        help="Input PDF bestand"
-    )
-    pdf_parser.add_argument(
-        "--output-file",
-        type=Path,
-        help="Output PDF bestand (standaard: input_anon.pdf)"
-    )
-    pdf_parser.add_argument(
-        "--no-layout",
-        action="store_true",
-        help="Behoud geen PDF layout (sneller maar minder mooi)"
+        "input",
+        help="Tekst om te anonimiseren, of pad naar bestand/directory"
     )
     
     return parser
@@ -104,23 +63,11 @@ def main() -> None:
         entities = [e.upper() for e in args.entities]
     
     try:
-        if args.command == "pdf":
-            handler.process_pdf(
-                input_file=args.input_file,
-                output_file=args.output_file,
-                entities=entities,
-                keep_layout=not args.no_layout,
-                output_format=args.format
-            )
-        elif args.input_file:
-            # Process text file
-            input_file = Path(args.text)
-            if not input_file.exists():
-                raise FileNotFoundError(f"Bestand niet gevonden: {args.text}")
-            
+        # Check if input is a path
+        input_path = Path(args.input)
+        if input_path.exists():
             handler.process_file(
-                input_file=input_file,
-                output_file=args.output_file,
+                input_file=input_path,
                 command=args.command,
                 entities=entities,
                 output_format=args.format
@@ -129,13 +76,13 @@ def main() -> None:
             # Process text directly
             if args.command == "analyze":
                 handler.analyze(
-                    text=args.text,
+                    text=args.input,
                     entities=entities,
                     output_format=args.format
                 )
             else:  # anonymize
                 handler.anonymize(
-                    text=args.text,
+                    text=args.input,
                     entities=entities,
                     output_format=args.format
                 )

@@ -23,10 +23,10 @@
   - [ ] Rapportage van CEFR niveau (A1-C2)
 
 ## Document Formaat Ondersteuning
-- [ ] PDF ondersteuning:
-  - [ ] PDF tekst extractie
+- [ x] PDF ondersteuning:
+  - [ x ] PDF tekst extractie
   - [ ] Behoud van layout en formatting
-  - [ ] Genereren van geanonimiseerde PDF
+  - [ x] Genereren van geanonimiseerde PDF
   - [ ] OCR ondersteuning voor gescande documenten
 
 - [ ] DOCX ondersteuning:
@@ -58,4 +58,11 @@
 - [ ] API uitbreiden met nieuwe functionaliteit
 - [ ] Betere error handling en logging
 - [ ] Uitgebreidere test suite
-- [ ] Documentatie verbeteren 
+- [ ] Documentatie verbeteren
+
+## Performance Verbeteringen
+
+- [ ] CLI performance verbeteren door model caching
+  - Modellen (SpaCy en RobBERT) worden nu elke keer opnieuw geladen
+  - Implementeer een daemon/service aanpak zoals in de API
+  - Overweeg een "warm" proces dat modellen in geheugen houdt 
