@@ -29,4 +29,5 @@ app.add_middleware(
 # Include routers
 app.include_router(health.router)
 app.include_router(analysis.router)
-app.include_router(anonymization.router) 
+app.include_router(anonymization.router)
+app.include_router(anonymization.download_router) 

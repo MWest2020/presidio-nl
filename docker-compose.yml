@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   api:
+    container_name: presidio-nl-api
     build:
       context: .
       dockerfile: Dockerfile
@@ -14,7 +15,11 @@ services:
       - ./src:/app/src
       - pip-cache:/root/.cache/pip
       - model-cache:/app/models
-      - pdf-storage:/app/storage
+      - type: volume
+        source: api-storage
+        target: /app/storage
+        volume:
+          nocopy: true
     environment:
       - API_HOST=0.0.0.0
       - API_PORT=8000
@@ -29,14 +34,18 @@ services:
       timeout: 10s
       retries: 3
       start_period: 5s
+    restart: unless-stopped
 
   cli:
+    container_name: presidio-nl-cli
     build:
       context: .
       dockerfile: Dockerfile
     image: presidio-nl:latest
     volumes:
       - ./src:/app/src
+      - ./onverwerkt:/app/onverwerkt
+      - ./verwerkt:/app/verwerkt
       - model-cache:/app/models
     environment:
       - TRANSFORMERS_CACHE=/app/models
@@ -46,5 +55,8 @@ services:
 
 volumes:
   pip-cache:
+    name: presidio-nl-pip-cache
   model-cache:
-  pdf-storage:
+    name: presidio-nl-model-cache
+  api-storage:
+    name: presidio-nl-api-storage

@@ -1,5 +1,16 @@
 # TODO List
 
+## Hoge Prioriteit
+- [ ] OCR ondersteuning voor gescande PDFs:
+  - [ ] Integratie met Tesseract OCR
+  - [ ] Pre-processing van gescande documenten
+    - [ ] Afbeelding verbetering
+    - [ ] Rotatie correctie
+    - [ ] Ruisvermindering
+  - [ ] Nederlandse taal ondersteuning
+  - [ ] API endpoint voor OCR verwerking
+  - [ ] Foutafhandeling voor slechte scans
+
 ## Refactoring Prioriteiten
 - [ ] Verwijder ongebruikte code en endpoints
 - [ ] Consolideer PDF verwerking logica
@@ -24,7 +35,7 @@
   - [x] PDF tekst extractie
   - [x] Behoud van layout en formatting
   - [x] Genereren van geanonimiseerde PDF
-  - [ ] OCR ondersteuning voor gescande documenten
+  - [ ] ~~OCR ondersteuning voor gescande documenten~~ (verplaatst naar Hoge Prioriteit)
 
 - [ ] DOCX ondersteuning:
   - [ ] DOCX tekst extractie

@@ -11,7 +11,6 @@ WORKDIR /app
 # Kopieer alleen requirements files eerst voor betere cache benutting
 COPY requirements/base.txt requirements/base.txt
 COPY requirements/api.txt requirements/api.txt
-COPY requirements/test.txt requirements/test.txt
 COPY setup.py .
 
 # Installeer dependencies in een virtuele omgeving
@@ -20,7 +19,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 # Installeer dependencies met caching
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install --no-cache-dir -r requirements/api.txt -r requirements/test.txt
+    pip install --no-cache-dir -r requirements/api.txt
 
 # Download models naar een specifieke directory
 RUN mkdir -p /app/models && \
@@ -29,8 +28,19 @@ RUN mkdir -p /app/models && \
     AutoTokenizer.from_pretrained(model_name, cache_dir='/app/models'); \
     AutoModelForTokenClassification.from_pretrained(model_name, cache_dir='/app/models')"
 
+# Create storage directory with correct permissions
+RUN mkdir -p /app/storage/processed && \
+    chmod 777 /app/storage/processed
+
 # Runtime stage
 FROM python:3.9-slim
+
+# Installeer Tesseract OCR en Nederlandse taaldata
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tesseract-ocr \
+    tesseract-ocr-nld \
+    poppler-utils \
+    && rm -rf /var/lib/apt/lists/*
 
 # Kopieer alleen de virtuele omgeving van de builder
 COPY --from=builder /opt/venv /opt/venv
@@ -41,13 +51,15 @@ COPY --from=builder /app/models /app/models
 ENV TRANSFORMERS_CACHE=/app/models
 ENV HF_HOME=/app/models
 
+# Create storage directory with correct permissions
+RUN mkdir -p /app/storage && \
+    chmod -R 777 /app/storage
+
 WORKDIR /app
 
-# Kopieer applicatie code en tests
+# Kopieer alleen de benodigde applicatie code
 COPY src/ src/
-COPY tests/ tests/
 COPY main.py .
-COPY pytest.ini .
 COPY setup.py .
 
 # Installeer package in development mode

@@ -4,6 +4,7 @@ import psutil
 import os
 from pathlib import Path
 from src.core.analyzer import DutchTextAnalyzer
+from pdfminer.pdfdocument import PdfReader
 
 @pytest.fixture
 def analyzer():
@@ -256,6 +257,30 @@ def test_real_pdf_files(analyzer):
         print(f"\nEntiteiten in {pdf_file}:")
         for r in results:
             print(f"{r.entity_type}: {text[r.start:r.end]} (score: {r.score:.2f})")
+
+def test_pdf_text_extraction(tmp_path):
+    """Test PDF text extractie voor zowel normale als gescande PDFs."""
+    from src.core.document import extract_text_from_pdf
+    
+    # Test normale PDF
+    normal_pdf_path = "onverwerkt/test.pdf"
+    text = extract_text_from_pdf(normal_pdf_path)
+    assert text.strip(), "Geen tekst geëxtraheerd uit normale PDF"
+    
+    # Test gescande PDF
+    scanned_pdf_path = "onverwerkt/visa_application.pdf"
+    text = extract_text_from_pdf(scanned_pdf_path)
+    assert text.strip(), "Geen tekst geëxtraheerd uit gescande PDF"
+    
+    # Verifieer dat OCR wordt gebruikt voor gescande PDFs
+    with open(scanned_pdf_path, 'rb') as file:
+        pdf_reader = PdfReader(file)
+        direct_text = pdf_reader.pages[0].extract_text()
+    
+    # Als direct_text leeg is maar extract_text_from_pdf wel tekst geeft,
+    # dan weten we dat OCR succesvol was
+    if not direct_text.strip():
+        assert text.strip(), "OCR extractie gefaald voor gescande PDF"
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

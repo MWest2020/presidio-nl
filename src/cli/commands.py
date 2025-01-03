@@ -5,6 +5,7 @@ import logging
 import warnings
 from typing import List, Optional
 from pathlib import Path
+import os
 
 # Configure logging
 logging.getLogger("transformers").setLevel(logging.ERROR)
@@ -13,6 +14,7 @@ warnings.filterwarnings("ignore", message="Asking to truncate")
 from ..core.analyzer import DutchTextAnalyzer
 from ..core.anonymizer import DutchTextAnonymizer
 from ..core.document import DocumentProcessor
+from ..core.ocr import OCRProcessor
 
 class CommandHandler:
     """Handler for CLI commands."""
@@ -22,6 +24,27 @@ class CommandHandler:
         self.analyzer = DutchTextAnalyzer()
         self.anonymizer = DutchTextAnonymizer()
         self.document_processor = DocumentProcessor()
+        self.ocr_processor = None  # Lazy load OCR processor
+    
+    def get_processor(self, use_ocr: bool = False) -> DocumentProcessor:
+        """Get the appropriate document processor."""
+        processor = self.document_processor
+        
+        if use_ocr and self.ocr_processor is None:
+            # Initialize OCR processor with system paths
+            tesseract_cmd = os.environ.get('TESSERACT_CMD', r'C:\Program Files\Tesseract-OCR\tesseract.exe')
+            poppler_path = os.environ.get('POPPLER_PATH', r'C:\Program Files\poppler-24.02.0\Library\bin')
+            
+            try:
+                self.ocr_processor = OCRProcessor(
+                    tesseract_cmd=tesseract_cmd,
+                    poppler_path=poppler_path
+                )
+                processor.ocr_processor = self.ocr_processor
+            except Exception as e:
+                print(f"Warning: Could not initialize OCR: {str(e)}")
+        
+        return processor
     
     def analyze(
         self,
@@ -128,7 +151,8 @@ class CommandHandler:
         input_file: Path,
         command: str = "anonymize",
         entities: Optional[List[str]] = None,
-        output_format: str = "text"
+        output_format: str = "text",
+        use_ocr: bool = False
     ) -> None:
         """
         Process a file or directory.
@@ -138,6 +162,7 @@ class CommandHandler:
             command: Command to execute (analyze/anonymize)
             entities: Optional list of entities
             output_format: Output format (text/json)
+            use_ocr: Whether to use OCR for PDFs
         """
         try:
             # Check if input is a directory
@@ -161,7 +186,8 @@ class CommandHandler:
                                 input_file=file_path,
                                 command=command,
                                 entities=entities,
-                                output_format=output_format
+                                output_format=output_format,
+                                use_ocr=use_ocr
                             )
                         except Exception as e:
                             print(f"Error bij verwerken {file_path}: {str(e)}")
@@ -176,7 +202,8 @@ class CommandHandler:
             if input_file.suffix.lower() == '.pdf':
                 # For PDFs, use document processor
                 output_file = output_dir / f"{input_file.stem}_anon.pdf"
-                stats = self.document_processor.process_pdf(
+                processor = self.get_processor(use_ocr)
+                stats = processor.process_pdf(
                     input_path=input_file,
                     output_path=output_file,
                     entities=entities,

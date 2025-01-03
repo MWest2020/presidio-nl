@@ -37,6 +37,11 @@ def create_parser() -> argparse.ArgumentParser:
         "input",
         help="Tekst om te analyseren, of pad naar bestand/directory"
     )
+    analyze_parser.add_argument(
+        "--ocr",
+        action="store_true",
+        help="Gebruik OCR voor gescande PDFs"
+    )
     
     # Anonymize command
     anonymize_parser = subparsers.add_parser(
@@ -46,6 +51,11 @@ def create_parser() -> argparse.ArgumentParser:
     anonymize_parser.add_argument(
         "input",
         help="Tekst om te anonimiseren, of pad naar bestand/directory"
+    )
+    anonymize_parser.add_argument(
+        "--ocr",
+        action="store_true",
+        help="Gebruik OCR voor gescande PDFs"
     )
     
     return parser
@@ -70,7 +80,8 @@ def main() -> None:
                 input_file=input_path,
                 command=args.command,
                 entities=entities,
-                output_format=args.format
+                output_format=args.format,
+                use_ocr=args.ocr
             )
         else:
             # Process text directly

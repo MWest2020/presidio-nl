@@ -1,161 +1,200 @@
-"""Routes for text anonymization."""
+"""API routes for text anonymization."""
 import os
-import time
+import logging
 import tempfile
 from pathlib import Path
-from fastapi import APIRouter, HTTPException, UploadFile, File
-from fastapi.responses import FileResponse
 from typing import List, Optional
+from fastapi import APIRouter, File, UploadFile, Query, HTTPException
+from pydantic import BaseModel
+from fastapi.responses import FileResponse
+from PyPDF2 import PdfReader
+import time
 
-from ..models import TextRequest, AnonymizationResponse, PDFProcessingResponse
-from ...core.analyzer import DutchTextAnalyzer
-from ...core.anonymizer import DutchTextAnonymizer
 from ...core.document import DocumentProcessor
+from ...core.ocr import OCRProcessor
+from ..models import AnonymizeResponse, ProcessResponse
 
-router = APIRouter()
-analyzer = DutchTextAnalyzer()
-anonymizer = DutchTextAnonymizer()
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+# Define storage directory for processed files (container storage)
+STORAGE_DIR = Path(os.environ.get('STORAGE_DIR', '/app/storage'))
+if not STORAGE_DIR.exists():
+    logger.info(f"Creating container storage directory: {STORAGE_DIR}")
+    STORAGE_DIR.mkdir(parents=True, exist_ok=True)
+
+logger.info(f"Container storage directory: {STORAGE_DIR}")
+
+# Define cleanup time (in seconds)
+MAX_STORAGE_TIME = int(os.environ.get('MAX_STORAGE_TIME', 3600))  # Default 1 hour
+
+# Cleanup old files
+def cleanup_old_files():
+    """Remove files older than MAX_STORAGE_TIME from container storage."""
+    current_time = time.time()
+    try:
+        for file_path in STORAGE_DIR.glob('*.pdf'):
+            if current_time - file_path.stat().st_mtime > MAX_STORAGE_TIME:
+                logger.info(f"Removing old file from container: {file_path}")
+                file_path.unlink()
+    except Exception as e:
+        logger.error(f"Error during cleanup: {str(e)}")
+
+# Run cleanup on startup
+cleanup_old_files()
+
+# Create two routers: one for anonymization and one for downloads
+anonymize_router = APIRouter(prefix="/anonymize", tags=["anonymization"])
+download_router = APIRouter(tags=["downloads"])
+
+# Initialize processors
 document_processor = DocumentProcessor()
 
-# Configuratie voor bestandsopslag
-STORAGE_DIR = Path(os.getenv("STORAGE_DIR", "storage"))
-MAX_STORAGE_TIME = int(os.getenv("MAX_STORAGE_TIME", "3600"))  # 1 uur in seconden
+# Initialize OCR processor with system paths if available
+tesseract_cmd = os.environ.get('TESSERACT_CMD', r'C:\Program Files\Tesseract-OCR\tesseract.exe')
+poppler_path = os.environ.get('POPPLER_PATH', r'C:\Program Files\poppler-24.02.0\Library\bin')
 
-def cleanup_old_files():
-    """Verwijder bestanden ouder dan MAX_STORAGE_TIME."""
-    if not STORAGE_DIR.exists():
-        return
-        
-    current_time = time.time()
-    for file in STORAGE_DIR.glob("*.pdf"):
-        if current_time - file.stat().st_mtime > MAX_STORAGE_TIME:
-            try:
-                file.unlink()
-            except Exception:
-                pass
+try:
+    ocr_processor = OCRProcessor(
+        tesseract_cmd=tesseract_cmd,
+        poppler_path=poppler_path
+    )
+except Exception as e:
+    logger.warning(f"Could not initialize OCR: {str(e)}")
+    ocr_processor = None
 
-@router.post("/anonymize", response_model=AnonymizationResponse)
-async def anonymize_text(request: TextRequest):
-    """
-    Analyze and anonymize text.
-    
-    Returns the anonymized text along with information about what was anonymized.
-    """
-    try:
-        # First analyze
-        results = analyzer.analyze_text(request.text, request.entities)
-        
-        # Then anonymize
-        anonymized = anonymizer.anonymize_text(request.text, results)
-        
-        # Create response
-        analysis_results = [
-            {
-                "entity_type": result.entity_type,
-                "text": request.text[result.start:result.end],
-                "start": result.start,
-                "end": result.end,
-                "score": result.score
-            }
-            for result in results
-        ]
-        
-        return {
-            "original_text": request.text,
-            "anonymized_text": anonymized,
-            "entities_found": analysis_results
-        }
-    
-    except ValueError as e:
-        raise HTTPException(
-            status_code=422,
-            detail=str(e)
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error anonymizing text: {str(e)}"
-        )
-
-@router.post("/anonymize/pdf", response_model=PDFProcessingResponse)
-async def anonymize_pdf(
-    pdf_file: UploadFile = File(...),
+class AnonymizeRequest(BaseModel):
+    """Request model for text anonymization."""
+    text: str
     entities: Optional[List[str]] = None
-):
+
+@anonymize_router.post("/text", response_model=AnonymizeResponse)
+async def anonymize_text(
+    request: AnonymizeRequest,
+    use_ocr: bool = Query(False, description="Of OCR gebruikt moet worden (alleen relevant voor PDF bestanden)")
+) -> AnonymizeResponse:
     """
-    Process and anonymize a PDF file.
+    Anonimiseer tekst.
     
-    Returns statistics about found entities and a URL to download the anonymized PDF.
+    Args:
+        request: AnonymizeRequest met text en optionele entities
+        use_ocr: Of OCR gebruikt moet worden (alleen relevant voor PDF bestanden)
+        
+    Returns:
+        Geanonimiseerde tekst en statistieken
     """
-    if not pdf_file.filename.lower().endswith('.pdf'):
-        raise HTTPException(
-            status_code=400,
-            detail="Uploaded file must be a PDF"
-        )
+    # Analyze text
+    results = document_processor.analyzer.analyze_text(request.text, request.entities)
     
-    try:
-        # Cleanup oude bestanden
-        cleanup_old_files()
+    # Anonymize text
+    anonymized = document_processor.anonymizer.anonymize_text(request.text, results)
+    
+    # Return response
+    return AnonymizeResponse(
+        original_text=request.text,
+        anonymized_text=anonymized,
+        entities_found=[{
+            "entity_type": r.entity_type,
+            "text": request.text[r.start:r.end],
+            "score": r.score
+        } for r in results]
+    )
+
+@anonymize_router.post("/pdf", response_model=ProcessResponse)
+async def anonymize_pdf(
+    file: UploadFile = File(...),
+    entities: Optional[List[str]] = Query(None, description="Optionele lijst van entiteiten om te detecteren"),
+    use_ocr: bool = Query(False, description="Of OCR gebruikt moet worden voor gescande PDFs")
+) -> ProcessResponse:
+    """
+    Anonimiseer een PDF bestand via de API.
+    
+    Args:
+        file: PDF bestand
+        entities: Optionele lijst van entiteiten om te detecteren
+        use_ocr: Of OCR gebruikt moet worden voor gescande PDFs
         
-        # Create storage directory if it doesn't exist
-        STORAGE_DIR.mkdir(exist_ok=True, parents=True)
+    Returns:
+        ProcessResponse met statistieken en download link
+    """
+    if not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="Alleen PDF bestanden worden ondersteund")
+
+    logger.debug(f"Starting PDF anonymization for file: {file.filename}")
+    
+    # Create temporary file for processing
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as temp_in:
+        content = await file.read()
+        temp_in.write(content)
+        temp_path = Path(temp_in.name)
         
-        # Generate unique filename
-        timestamp = int(time.time())
-        output_filename = f"anon_{timestamp}_{pdf_file.filename}"
-        output_file = STORAGE_DIR / output_filename
-        
-        # Create temporary directory for processing
-        with tempfile.TemporaryDirectory() as temp_dir:
-            # Save uploaded file
-            temp_input = Path(temp_dir) / "input.pdf"
-            
-            with open(temp_input, "wb") as buffer:
-                content = await pdf_file.read()
-                buffer.write(content)
+        try:
+            # Configure OCR if requested
+            if use_ocr and ocr_processor:
+                logger.debug("OCR requested and available, configuring processor")
+                document_processor.ocr_processor = ocr_processor
+            elif use_ocr:
+                logger.warning("OCR requested but not available")
             
             # Process PDF
+            timestamp = int(time.time())
+            output_filename = f"{timestamp}_{Path(file.filename).stem}_geanonimiseerd.pdf"
+            output_path = STORAGE_DIR / output_filename
+            
             stats = document_processor.process_pdf(
-                input_path=temp_input,
-                output_path=output_file,
-                entities=entities,
-                keep_layout=True
+                input_path=temp_path,
+                output_path=output_path,
+                entities=entities
             )
             
-            # Create response
-            return {
-                "total_entities": stats["total_entities"],
-                "entities_by_type": {
-                    entity_type: [
-                        {
-                            "text": entity["text"],
-                            "score": float(entity["score"])  # Convert numpy.float32 to Python float
-                        }
-                        for entity in entities
-                    ]
-                    for entity_type, entities in stats["entities_by_type"].items()
-                },
-                "anonymized_pdf_url": f"/download/{output_filename}"
-            }
-    
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error processing PDF: {str(e)}"
-        )
+            logger.debug(f"PDF processing completed with stats: {stats}")
+            
+            # Verify file exists before returning response
+            if not output_path.exists():
+                logger.error(f"Output file not found after processing: {output_path}")
+                raise HTTPException(
+                    status_code=500,
+                    detail="PDF verwerking mislukt: output bestand niet gevonden"
+                )
+            
+            # Add download link to stats with the exact filename including timestamp
+            stats["download_link"] = f"/download/{output_filename}"  # Use the same filename with timestamp
+            
+            return ProcessResponse(**stats)
+            
+        except Exception as e:
+            logger.error(f"Error during PDF processing: {str(e)}", exc_info=True)
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error processing PDF: {str(e)}"
+            )
+        finally:
+            # Cleanup temporary file
+            if temp_path.exists():
+                os.unlink(temp_path)
 
-@router.get("/download/{filename}")
-async def download_pdf(filename: str):
-    """Download an anonymized PDF file."""
+@download_router.get("/download/{filename}")
+async def download_file(filename: str):
+    """Download a processed PDF file from container storage."""
     file_path = STORAGE_DIR / filename
+    
+    logger.debug(f"Download requested for file: {filename}")
+    logger.debug(f"Looking for file in container storage: {file_path}")
+    
     if not file_path.exists():
+        logger.error(f"File not found in container storage: {file_path}")
         raise HTTPException(
-            status_code=404,
-            detail="File not found"
+            status_code=404, 
+            detail=f"Bestand niet gevonden. Mogelijk is de verwerking nog bezig of is het bestand verlopen (na {MAX_STORAGE_TIME} seconden)."
         )
     
     return FileResponse(
-        file_path,
-        media_type="application/pdf",
-        filename=filename
-    ) 
+        path=str(file_path),
+        filename=filename,
+        media_type="application/pdf"
+    )
+
+# Export both routers
+router = anonymize_router
+download_router = download_router 
