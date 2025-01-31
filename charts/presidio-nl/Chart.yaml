@@ -1,13 +1,23 @@
 apiVersion: v2
 name: presidio-nl
-description: A Helm chart for Presidio-NL API
+description: A Helm chart for Presidio-NL API (Internal Use Only) - Text anonymization and PII detection service
 type: application
 version: 0.1.0
-appVersion: "0.1.0"
+appVersion: "1.0.0"
 
 maintainers:
-  - name: Mark Westerweel
-    email: markwesterweel@gmail.com
+  - name: Conduction Team
+    email: info@conduction.nl
+
+keywords:
+  - nlp
+  - anonymization
+  - privacy
+  - pii
+
+home: https://github.com/ConductionNL/presidio-nl
+sources:
+  - https://github.com/ConductionNL/presidio-nl
 
 dependencies:
   - name: common

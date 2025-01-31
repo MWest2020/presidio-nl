@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: presidio-nl-api
+  namespace: conduction
+spec:
+  podSelector:
+    matchLabels:
+      app: presidio-nl-api
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    # Alleen toegang vanuit de nextcloud namespace
+    - namespaceSelector:
+        matchLabels:
+          name: nextcloud
+    # En alleen naar de API port
+    ports:
+    - protocol: TCP
+      port: 8000 

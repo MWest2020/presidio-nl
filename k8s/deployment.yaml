@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: presidio-nl-api
+  namespace: conduction
+  labels:
+    app: presidio-nl-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: presidio-nl-api
+  template:
+    metadata:
+      labels:
+        app: presidio-nl-api
+    spec:
+      containers:
+      - name: api
+        image: ghcr.io/conductionnl/presidio-nl:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: API_HOST
+          value: "0.0.0.0"
+        - name: API_PORT
+          value: "8000"
+        - name: STORAGE_DIR
+          value: "/app/storage"
+        - name: MAX_STORAGE_TIME
+          value: "3600"
+        resources:
+          limits:
+            memory: "1Gi"
+            cpu: "1"
+          requests:
+            memory: "512Mi"
+            cpu: "200m"
+        volumeMounts:
+        - name: storage
+          mountPath: /app/storage
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: storage
+        persistentVolumeClaim:
+          claimName: presidio-nl-storage 

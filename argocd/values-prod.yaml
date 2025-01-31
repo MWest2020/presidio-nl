@@ -1,0 +1,20 @@
+# Production overrides for presidio-nl
+resources:
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+  requests:
+    cpu: 1000m
+    memory: 1Gi
+
+persistence:
+  size: 40Gi
+
+autoscaling:
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+app:
+  debug: false
+  logLevel: "info" 
