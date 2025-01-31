@@ -12,10 +12,9 @@ spec:
     helm:
       valueFiles:
         - values.yaml
-        - ../../argocd/values-prod.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: conduction
+    namespace: presidio-nl
   syncPolicy:
     automated:
       prune: true
