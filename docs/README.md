@@ -2,6 +2,25 @@
 
 ## Quick Start
 
+### Container Registry Setup
+
+To build and push the container image:
+```bash
+# Build the image
+docker build -t ghcr.io/mwest2020/presidio-nl:latest .
+
+# Login to GitHub Container Registry
+docker login ghcr.io -u YOUR_GITHUB_USERNAME
+# Use a GitHub Personal Access Token with these scopes:
+# - write:packages
+# - read:packages
+# - delete:packages
+# - repo (for private repositories)
+
+# Push the image
+docker push ghcr.io/mwest2020/presidio-nl:latest
+```
+
 ### Met Docker
 
 ```bash

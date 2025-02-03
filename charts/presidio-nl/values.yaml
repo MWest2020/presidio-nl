@@ -2,11 +2,14 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/conductionnl/presidio-nl
+  repository: ghcr.io/mwest2020/presidio-nl
   tag: latest
   pullPolicy: IfNotPresent
 
+# Add documentation about required GitHub Container Registry setup
 imagePullSecrets: []
+  # - name: ghcr-secret  # Uncomment and create this secret if using private registry
+
 nameOverride: ""
 fullnameOverride: ""
 
