@@ -23,3 +23,8 @@ dependencies:
   - name: common
     version: 1.x.x
     repository: https://charts.bitnami.com/bitnami 
+
+image:
+  repository: ghcr.io/mwest2020/presidio-nl
+  tag: latest
+  pullPolicy: IfNotPresent 

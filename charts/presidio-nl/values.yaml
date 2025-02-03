@@ -52,8 +52,9 @@ resources:
 
 persistence:
   enabled: true
-  storageClass: "standard"
-  size: 25Gi
+  # Use NFS storage class for better performance with container storage
+  storageClass: "nfs"  # Using the NFS storage class from the cluster
+  size: 25Gi    # Size needed for container + working space
 
 networkPolicy:
   enabled: true
