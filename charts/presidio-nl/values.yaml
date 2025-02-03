@@ -6,9 +6,8 @@ image:
   tag: latest
   pullPolicy: IfNotPresent
 
-# Add documentation about required GitHub Container Registry setup
+# No imagePullSecrets needed for public repository
 imagePullSecrets: []
-  # - name: ghcr-secret  # Uncomment and create this secret if using private registry
 
 nameOverride: ""
 fullnameOverride: ""
