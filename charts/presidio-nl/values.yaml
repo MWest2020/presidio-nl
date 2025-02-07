@@ -58,7 +58,7 @@ persistence:
 networkPolicy:
   enabled: true
   allowedNamespaces:
-    - nextcloud
+    - presidio
 
 autoscaling:
   enabled: true
