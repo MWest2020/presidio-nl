@@ -1,5 +1,7 @@
 """FastAPI application for text analysis and anonymization."""
 import os
+os.environ['TORCHDYNAMO_DISABLE'] = '1'
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
