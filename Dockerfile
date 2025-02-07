@@ -53,11 +53,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Set environment variables for model caching
+# Set environment variables for model caching and disable torch dynamo
 ENV TRANSFORMERS_CACHE=/app/models
 ENV HF_HOME=/app/models
 ENV TORCH_HOME=/app/models
 ENV PYTHONUNBUFFERED=1
+ENV TORCHDYNAMO_DISABLE=1
 
 # Kopieer de gedownloade models met juiste permissions
 COPY --from=builder /app/models /app/models
