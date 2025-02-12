@@ -46,10 +46,12 @@ ingress:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/proxy-body-size: "8m"
   hosts:
     - host: api.presidio-nl.conduction.nl
       paths:
-        - path: /
+        - path: /api/v1(/|$)(.*)
           pathType: Prefix
           backend:
             service:
