@@ -51,11 +51,13 @@ ingress:
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, PUT, POST, DELETE, PATCH, OPTIONS"
     nginx.ingress.kubernetes.io/cors-allow-headers: "*"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header X-Forwarded-Prefix /api/v1;
   hosts:
     - host: api.presidio-nl.conduction.nl
       paths:
-        - path: /
-          pathType: Prefix
+        - path: /api/v1/(.*)
+          pathType: ImplementationSpecific
           backend:
             service:
               name: conduction-accept-presidio-presidio-nl
