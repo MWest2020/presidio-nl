@@ -51,7 +51,16 @@ ingress:
     nginx.ingress.kubernetes.io/configuration-snippet: |
       proxy_set_header Host $host;
       proxy_set_header X-Real-IP $remote_addr;
-  hosts: []
+  hosts:
+    - host: "api.example.com"
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: conduction-accept-presidio-presidio-nl
+              port:
+                number: 8000
   tls: []
 
 resources:
