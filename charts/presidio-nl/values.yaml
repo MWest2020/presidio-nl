@@ -43,11 +43,9 @@ ingress:
   className: nginx
   annotations:
     kubernetes.io/ingress.class: nginx
-    cert-manager.io/cluster-issuer: letsencrypt-prod
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"  # Disable SSL redirect
     nginx.ingress.kubernetes.io/use-regex: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: "8m"
-    # Add these to explicitly allow all traffic
     nginx.ingress.kubernetes.io/whitelist-source-range: 0.0.0.0/0
     nginx.ingress.kubernetes.io/enable-cors: "true"
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
@@ -63,10 +61,8 @@ ingress:
               name: conduction-accept-presidio-presidio-nl
               port:
                 number: 8000
-  tls:
-    - secretName: presidio-nl-tls
-      hosts:
-        - api.presidio-nl.conduction.nl
+  # Remove TLS configuration for now
+  tls: []
 
 resources:
   limits:
