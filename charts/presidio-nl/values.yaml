@@ -47,6 +47,12 @@ ingress:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/use-regex: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: "8m"
+    # Add these to explicitly allow all traffic
+    nginx.ingress.kubernetes.io/whitelist-source-range: 0.0.0.0/0
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, PUT, POST, DELETE, PATCH, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "*"
   hosts:
     - host: api.presidio-nl.conduction.nl
       paths:
@@ -100,8 +106,8 @@ app:
   api:
     host: "0.0.0.0"
     port: 8000
-    # Geen external URL omdat de API alleen intern beschikbaar is
-    internalOnly: true
+    # Allow external access
+    internalOnly: false
   storage:
     cleanupInterval: 3600  # 1 uur
  
