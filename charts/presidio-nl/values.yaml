@@ -47,26 +47,25 @@ ingress:
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
     nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
     nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
-    nginx.ingress.kubernetes.io/enable-access-log: "true"
-    nginx.ingress.kubernetes.io/enable-rewrite-log: "true"
-    # Connection timeouts
-    nginx.ingress.kubernetes.io/proxy-connect-timeout: "5"
+    nginx.ingress.kubernetes.io/proxy-body-size: "8m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
-    nginx.ingress.kubernetes.io/proxy-next-upstream: "error timeout http_502"
-    nginx.ingress.kubernetes.io/proxy-next-upstream-tries: "2"
-    # Keep alive settings
-    nginx.ingress.kubernetes.io/upstream-keepalive-connections: "32"
-    nginx.ingress.kubernetes.io/upstream-keepalive-timeout: "32"
-    nginx.ingress.kubernetes.io/upstream-keepalive-requests: "100"
-    # Buffer settings
-    nginx.ingress.kubernetes.io/proxy-buffer-size: "8k"
-    nginx.ingress.kubernetes.io/client-body-buffer-size: "8k"
+    nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+    nginx.ingress.kubernetes.io/proxy-busy-buffers-size: "256k"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header Connection "upgrade";
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
   hosts:
     - host: api.presidio-nl.conduction.nl
       paths:
-        - path: /
-          pathType: Prefix
+        - path: /api/v1/(.*)
+          pathType: ImplementationSpecific
           backend:
             service:
               name: conduction-accept-presidio-presidio-nl
@@ -89,9 +88,19 @@ persistence:
   size: 25Gi
 
 networkPolicy:
-  enabled: false
+  enabled: true
   allowedNamespaces:
     - presidio
+    - default
+  ingressRules:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: default
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 8000
 
 autoscaling:
   enabled: true
