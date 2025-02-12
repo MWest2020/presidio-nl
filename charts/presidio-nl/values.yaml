@@ -44,12 +44,17 @@ ingress:
   annotations:
     kubernetes.io/ingress.class: nginx
     cert-manager.io/cluster-issuer: letsencrypt-prod
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
   hosts:
     - host: api.presidio-nl.conduction.nl
       paths:
-        - path: /(/|$)(.*)
+        - path: /
           pathType: Prefix
+          backend:
+            service:
+              name: conduction-accept-presidio-presidio-nl
+              port:
+                number: 8000
   tls:
     - secretName: presidio-nl-tls
       hosts:
