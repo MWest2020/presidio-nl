@@ -51,10 +51,11 @@ ingress:
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, PUT, POST, DELETE, PATCH, OPTIONS"
     nginx.ingress.kubernetes.io/cors-allow-headers: "*"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
   hosts:
     - host: api.presidio-nl.conduction.nl
       paths:
-        - path: /api/v1
+        - path: /api/v1(/|$)(.*)
           pathType: Prefix
           backend:
             service:
