@@ -6,18 +6,17 @@ image:
   tag: latest
   pullPolicy: IfNotPresent
 
-# No imagePullSecrets needed for public repository
+# Geen imagePullSecrets nodig voor een publieke repository
 imagePullSecrets: []
 
 nameOverride: ""
 fullnameOverride: ""
 
 serviceAccount:
-  # Specifies whether a service account should be created
+  # Geeft aan dat er een serviceaccount aangemaakt moet worden
   create: true
-  # Annotations to add to the service account
   annotations: {}
-  # The name of the service account to use.
+  # Naam wordt automatisch gegenereerd indien leeg
   name: ""
 
 podAnnotations: {}
@@ -33,21 +32,19 @@ securityContext:
   runAsUser: 1000
 
 service:
-  # ClusterIP zorgt ervoor dat de service alleen binnen het cluster bereikbaar is
+  # ClusterIP zorgt voor interne toegang binnen het cluster
   type: ClusterIP
   port: 8000
 
 ingress:
-  # Ingress is uitgeschakeld omdat de API intern beschikbaar moet blijven
-  enabled: false
-  # Indien je in de toekomst externe toegang wilt toevoegen, kun je hieronder de configuratie aanpassen
+  enabled: true
   className: nginx
   annotations:
     kubernetes.io/ingress.class: nginx
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/use-regex: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: "8m"
-    nginx.ingress.kubernetes.io/whitelist-source-range: 0.0.0.0/0
+    nginx.ingress.kubernetes.io/whitelist-source-range: "0.0.0.0/0"
     nginx.ingress.kubernetes.io/enable-cors: "true"
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, PUT, POST, DELETE, PATCH, OPTIONS"
@@ -61,4 +58,49 @@ ingress:
           backend:
             service:
               name: conduction-accept-presidio-presidio-nl
-   
+              port:
+                number: 8000
+  tls: []
+
+resources:
+  limits:
+    cpu: 2000m
+    memory: 8Gi
+  requests:
+    cpu: 1000m
+    memory: 4Gi
+
+persistence:
+  enabled: true
+  # Gebruik de NFS storageclass voor betere prestaties
+  storageClass: "nfs"
+  size: 25Gi
+
+networkPolicy:
+  enabled: false
+  allowedNamespaces:
+    - presidio
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Applicatie specifieke instellingen
+app:
+  debug: false
+  logLevel: "info"
+  api:
+    host: "0.0.0.0"
+    port: 8000
+    # internalOnly op false zorgt ervoor dat er geen restrictie is voor externe toegang
+    internalOnly: false
+  storage:
+    cleanupInterval: 3600  # 1 uur
