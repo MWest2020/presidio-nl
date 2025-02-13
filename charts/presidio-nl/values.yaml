@@ -50,7 +50,7 @@ ingress:
     nginx.ingress.kubernetes.io/enable-rewrite-log: "true"
     nginx.ingress.kubernetes.io/proxy-buffering: "off"
   hosts:
-    - host: "api.presidio-nl.conduction.nl"
+    - host: "api.presidio-nl.commonground.nu"
       paths:
         - path: /
           pathType: Prefix
