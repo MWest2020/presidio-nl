@@ -59,6 +59,7 @@ ENV HF_HOME=/app/models
 ENV TORCH_HOME=/app/models
 ENV PYTHONUNBUFFERED=1
 ENV TORCHDYNAMO_DISABLE=1
+ENV API_PORT=8080
 
 # Kopieer de gedownloade models met juiste permissions
 COPY --from=builder /app/models /app/models
