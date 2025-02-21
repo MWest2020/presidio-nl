@@ -89,5 +89,8 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
 # Set user
 USER 1000
 
+# Debug print
+RUN echo "API_PORT=$API_PORT"
+
 # Start de applicatie
-CMD ["uvicorn", "src.api.app:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["sh", "-c", "uvicorn src.api.app:app --host 0.0.0.0 --port $API_PORT"]
