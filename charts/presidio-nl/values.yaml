@@ -34,7 +34,7 @@ securityContext:
 service:
   # ClusterIP zorgt voor interne toegang binnen het cluster
   type: ClusterIP
-  port: 8000
+  port: 8080
 
 ingress:
   enabled: true
@@ -56,7 +56,7 @@ ingress:
             service:
               name: conduction-accept-presidio-presidio-nl
               port:
-                number: 8000
+                number: 8080
   tls:
     - hosts:
         - "api.presidio-nl.commonground.nu"
@@ -99,7 +99,7 @@ app:
   logLevel: "info"
   api:
     host: "0.0.0.0"
-    port: 8000
+    port: 8080
     # internalOnly op false zorgt ervoor dat er geen restrictie is voor externe toegang
     internalOnly: false
   storage:
