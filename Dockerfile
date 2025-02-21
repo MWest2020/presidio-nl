@@ -79,14 +79,14 @@ COPY setup.py .
 # Installeer package in development mode
 RUN pip install -e .
 
-EXPOSE 8000
+EXPOSE 8080
 
 # Healthcheck
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD curl -f http://localhost:8080/health || exit 1
 
 # Set user
 USER 1000
 
 # Start de applicatie
-CMD ["uvicorn", "src.api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "src.api.app:app", "--host", "0.0.0.0", "--port", "8080"]
