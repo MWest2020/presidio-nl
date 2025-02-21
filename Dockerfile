@@ -75,6 +75,7 @@ WORKDIR /app
 # Kopieer alleen de benodigde applicatie code
 COPY src/ src/
 COPY main.py .
+COPY src/run.py .
 COPY setup.py .
 
 # Installeer package in development mode
@@ -90,4 +91,4 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
 USER 1000
 
 # Start de applicatie
-CMD ["uvicorn", "src.api.app:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["python", "run.py"]
