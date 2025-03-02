@@ -9,7 +9,7 @@ from .routes import analysis, anonymization, health
 
 # Get configuration from environment variables
 API_HOST = os.getenv("API_HOST", "0.0.0.0")
-API_PORT = int(os.getenv("API_PORT", "8000"))
+API_PORT = int(os.getenv("API_PORT", "8080"))
 API_ROOT_PATH = os.getenv("API_ROOT_PATH", "/api/v1")
 
 app = FastAPI(
