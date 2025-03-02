@@ -1,7 +1,7 @@
 """Routes for text analysis."""
 from fastapi import APIRouter, HTTPException
 
-from ..models import TextRequest, AnalysisResponse
+from ..models import TextRequest, AnalysisResponse, Entity
 from ...core.analyzer import DutchTextAnalyzer
 
 router = APIRouter()
@@ -17,18 +17,19 @@ async def analyze_text(request: TextRequest):
     try:
         results = analyzer.analyze_text(request.text, request.entities)
         
-        analysis_results = [
-            {
-                "entity_type": result.entity_type,
-                "text": request.text[result.start:result.end],
-                "start": result.start,
-                "end": result.end,
-                "score": result.score
-            }
+        entities_found = [
+            Entity(
+                entity_type=result.entity_type,
+                text=request.text[result.start:result.end],
+                score=result.score
+            )
             for result in results
         ]
         
-        return {"results": analysis_results}
+        return AnalysisResponse(
+            text=request.text,
+            entities_found=entities_found
+        )
     
     except ValueError as e:
         raise HTTPException(
