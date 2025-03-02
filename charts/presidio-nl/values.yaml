@@ -77,9 +77,11 @@ persistence:
   size: 25Gi
 
 networkPolicy:
-  enabled: false
+  enabled: true
   allowedNamespaces:
     - presidio
+    - ingress-nginx
+    - istio-system
 
 autoscaling:
   enabled: true
