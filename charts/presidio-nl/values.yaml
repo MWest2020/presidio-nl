@@ -83,8 +83,7 @@ networkPolicy:
   enabled: true
   allowedNamespaces:
     - presidio
-    - ingress-nginx
-    - istio-system
+    - default
 
 autoscaling:
   enabled: true
